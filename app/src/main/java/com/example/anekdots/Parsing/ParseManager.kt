@@ -1,9 +1,13 @@
 package com.example.anekdots.Parsing
 
+import android.os.Build
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.io.IOException
+import java.sql.Time
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class ParseManager {
     val url = "https://www.anekdot.ru"
@@ -103,11 +107,40 @@ class ParseManager {
         for (i in 1 until listAll.size) {
             val currentElement = listAll.get(i)
             val text =
-                currentElement.select("p.title").text() + moduleTextToString(currentElement.select("div.text"))
+                currentElement.select("p.title").text()+ "\n" + moduleTextToString(currentElement.select("div.text"))
             if(text != ""){
                 val info = currentElement.select("div.votingbox").select("div.btn2").select("a")
                 val link = findAuthorLink(info)
-                aneckdotsList.add(Aneckdot(text, link))
+                if(text.length>4) {
+                    aneckdotsList.add(Aneckdot(text, link))
+                }
+            }
+        }
+        return aneckdotsList
+    }
+
+    //load list of aneckdots from chapter "best of past"
+    fun loadBestFromPast(): ArrayList<Aneckdot> {
+        val aneckdotsList = ArrayList<Aneckdot>()
+        val formatter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            DateTimeFormatter.ofPattern("MMdd")
+        } else {
+            TODO("VERSION.SDK_INT < O")
+        }
+        val current = LocalDateTime.now().format(formatter)
+        val doc = Jsoup.connect("https://www.anekdot.ru/best/anekdot/"+current.toString()+"/").get()
+        val listAll = doc.body().selectFirst("div.wrapper.desktop").selectFirst("div.content.content-min")
+            .select("div.col-left.col-left-margin").select("div.topicbox").toList()
+        for (i in 1 until listAll.size) {
+            val currentElement = listAll.get(i)
+            val text =
+                currentElement.select("p.title").text()+ "\n" + moduleTextToString(currentElement.select("div.text"))
+            if(text != ""){
+                val info = currentElement.select("div.votingbox").select("div.btn2").select("a")
+                val link = findAuthorLink(info)
+                if(text.length>4) {
+                    aneckdotsList.add(Aneckdot(text, link))
+                }
             }
         }
         return aneckdotsList

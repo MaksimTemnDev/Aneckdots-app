@@ -94,6 +94,8 @@ class MainActivity : ComponentActivity() {
                         }else if(indx == -2){
                             readDb(db)
                             isFavourite = true
+                        }else if(indx == -3){
+                            loadBestAnrckd()
                         }
                         anekdotScreen(texts = listOfAneckdots, indx = indx, db, isFavourite)
                     }
@@ -114,6 +116,13 @@ class MainActivity : ComponentActivity() {
             }else{
 
             }
+        }
+    }
+
+    //load aneckdots to listOfAneckdots
+    fun loadBestAnrckd(){
+        thread {
+            listOfAneckdots = parser.loadBestFromPast()
         }
     }
 
