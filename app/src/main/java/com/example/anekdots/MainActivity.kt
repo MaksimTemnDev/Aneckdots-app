@@ -231,7 +231,17 @@ class MainActivity : ComponentActivity() {
         val scaffoldState= rememberScaffoldState()
         Scaffold(modifier = Modifier
             .fillMaxSize()
-            .background(BeidgeMiddle), scaffoldState = scaffoldState) {
+            .background(BeidgeMiddle),
+            scaffoldState = scaffoldState,
+            snackbarHost = {
+                SnackbarHost(hostState = it){
+                    data->
+                    Snackbar(snackbarData = data,
+                        backgroundColor = BrownMain,
+                        contentColor = BeidgeWhite
+                    )
+                }
+            }) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -343,9 +353,6 @@ class MainActivity : ComponentActivity() {
         val nextTapBool = remember {
             mutableStateOf(true)
         }
-        val snackState = remember {
-            SnackbarHostState()
-        }
         val coroutineScope = rememberCoroutineScope()
         Box(modifier = Modifier
             .fillMaxSize()
@@ -375,7 +382,8 @@ class MainActivity : ComponentActivity() {
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(BrownMain)
-                            .padding(5.dp).clickable{
+                            .padding(5.dp)
+                            .clickable {
                                 val clipboardManager =
                                     getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                                 val clipData = ClipData.newPlainText(
@@ -385,8 +393,10 @@ class MainActivity : ComponentActivity() {
                                 )
                                 clipboardManager.setPrimaryClip(clipData)
                                 coroutineScope.launch {
-                                    //snackState.showSnackbar("Text copied!")
-                                    scaffoldState.snackbarHostState.showSnackbar("Text copied!", duration = SnackbarDuration.Short)
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        "Text copied!",
+                                        duration = SnackbarDuration.Short
+                                    )
                                 }
                             }
                     ) {
@@ -511,25 +521,5 @@ class MainActivity : ComponentActivity() {
                     }
             }
         }
-        SnackbarHost(
-            hostState = snackState,
-            snackbar = { snackbarData: SnackbarData ->
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(2.dp, Color.White),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .wrapContentSize()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = snackbarData.message)
-                    }
-                }
-            }
-        )
     }
 }
