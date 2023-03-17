@@ -88,7 +88,9 @@ fun dualBoxes(
             if(funType == 0){
                 navHostController.navigate(Screen.MenuScreen.route)
             } else if(funType == 1){
-
+                val index = -3
+                val call = "${Screen.AnekdotScreen.route}/" + index
+                navHostController.navigate(call)
             } else if(funType == 2){
                 val browse = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
                 startActivity(applicationContext, browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null)

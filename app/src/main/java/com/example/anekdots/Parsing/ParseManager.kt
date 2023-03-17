@@ -139,7 +139,16 @@ class ParseManager {
     }
 
         fun moduleTextToString(input: Elements): String{
-            val res = input.toString().replace("<br>", "").replace("</div>", "").replaceBefore(">\n", "").replace('>', ' ').replace('#', ' ')
+            var res = input.toString().replace("<br>", "").replace("</div>", "").replaceBefore(">\n", "").replace('>', ' ').replace('#', ' ')
+            val sub = res.split("\n")
+            if (sub[0] == " " && sub[sub.lastIndex] == ""){
+                res = ""
+                for (i in 0 until sub.size){
+                    if(i != 0 && i!= sub.lastIndex){
+                        res = res+sub[i]+"\n"
+                    }
+                }
+            }
             return res
         }
 }
