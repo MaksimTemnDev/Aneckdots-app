@@ -397,7 +397,7 @@ class MainActivity : ComponentActivity() {
                                     getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                                 val clipData = ClipData.newPlainText(
                                     "aneckdot", listOfAneckdots.get(
-                                        indx!!
+                                        showenId.value
                                     ).text
                                 )
                                 clipboardManager.setPrimaryClip(clipData)
