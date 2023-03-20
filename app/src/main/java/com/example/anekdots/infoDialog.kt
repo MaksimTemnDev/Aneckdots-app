@@ -4,6 +4,7 @@ import android.graphics.Paint.Align
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,14 +32,17 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
             .fillMaxWidth(0.95f)
             .fillMaxHeight(0.6f)
             .border(1.dp, color = BrownDark, shape = RoundedCornerShape(15.dp))) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(color = BeidgeWhite)
-                    .padding(15.dp),
+            Column(modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(color = BeidgeWhite)
+                .padding(15.dp),
             verticalArrangement = Arrangement.spacedBy(25.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(text = "О приложении", style = MaterialTheme.typography.h6, textAlign = TextAlign.Center)
-                Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(15.dp)) {
+                //I know that here should be weight, but something got wrong( thats why i use fillMaxHeight (mayby will fix in future)
+                Column(Modifier.fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+                    .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(15.dp)) {
                     Text(text = "В данном приложении собраны различные анекдоты," +
                             " которые удобно распределены по различным разделам данного приложения," +
                             " если вы хотите прочитать выборку случайных анекдотов," +
@@ -51,7 +55,7 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
                             " Для того чтобы выбрать анекдоты по конретным темам" +
                             " нажмите на кнопку 'по темам', вы попадёте на список тем" +
                             " далее выбираете нужную и получаете подборку анекдотов"
-                        , fontWeight = FontWeight.Bold)
+                        , fontWeight = FontWeight.Bold, textAlign = TextAlign.Start)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(30.dp),
                 verticalAlignment = Alignment.CenterVertically) {
