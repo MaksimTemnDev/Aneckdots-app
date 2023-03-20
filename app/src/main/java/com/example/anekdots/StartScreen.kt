@@ -6,8 +6,12 @@ import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,22 +88,28 @@ fun dualBoxes(
             .shadow(8.dp, shape = RoundedCornerShape(15.dp), ambientColor = BrownDark)
             .clip(RoundedCornerShape(15.dp))) {
         Image(painter = painterResource(id = chooseButton(btnType)), contentDescription = null,
-            Modifier.fillMaxSize().clickable {
-            if(funType == 0){
-                navHostController.navigate(Screen.MenuScreen.route)
-            } else if(funType == 1){
-                val index = -3
-                val call = "${Screen.AnekdotScreen.route}/" + index
-                navHostController.navigate(call)
-            } else if(funType == 2){
-                val browse = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
-                startActivity(applicationContext, browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null)
-            }else if(funType == 3){
-                val index = -1
-                val call = "${Screen.AnekdotScreen.route}/" + index
-                navHostController.navigate(call)
-            }
-            },
+            Modifier
+                .fillMaxSize()
+                .clickable {
+                    if (funType == 0) {
+                        navHostController.navigate(Screen.MenuScreen.route)
+                    } else if (funType == 1) {
+                        val index = -3
+                        val call = "${Screen.AnekdotScreen.route}/" + index
+                        navHostController.navigate(call)
+                    } else if (funType == 2) {
+                        val browse = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
+                        startActivity(
+                            applicationContext,
+                            browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            null
+                        )
+                    } else if (funType == 3) {
+                        val index = -1
+                        val call = "${Screen.AnekdotScreen.route}/" + index
+                        navHostController.navigate(call)
+                    }
+                },
             contentScale = ContentScale.FillBounds)
         Box(
             Modifier
@@ -120,16 +130,19 @@ fun chooseButton(type: Boolean): Int{
 
 @Composable
 fun createSingleBox(title: String, type: Boolean, navHostController: NavHostController) {
+    var showDiaolog = remember{ mutableStateOf(false) }
     Box(Modifier.padding(horizontal = 20.dp)){
         val imageModdifier = Modifier
             .fillMaxSize()
             .shadow(8.dp, shape = RoundedCornerShape(15.dp), ambientColor = BrownDark)
             .clip(RoundedCornerShape(15.dp))
             .clickable {
-                if(type){
+                if (type) {
                     val index = -2
                     val call = "${Screen.AnekdotScreen.route}/" + index
                     navHostController.navigate(call)
+                } else {
+                    showDiaolog.value = true
                 }
             }
         if(type) {
@@ -157,5 +170,8 @@ fun createSingleBox(title: String, type: Boolean, navHostController: NavHostCont
                 Text(text = title, fontSize = 18.sp, color = BrownDark, fontWeight = FontWeight.Bold)
             }
         }
+    }
+    if(showDiaolog.value == true){
+        infoDialog(onDismiss = {isShowing: Boolean ->  showDiaolog.value = isShowing})
     }
 }

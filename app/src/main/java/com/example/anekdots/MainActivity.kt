@@ -108,7 +108,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     fun loadRandomAneckd(add: Boolean) {
         thread {
             if (add == false) {
