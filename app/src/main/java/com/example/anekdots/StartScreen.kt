@@ -2,6 +2,8 @@ package com.example.anekdots
 
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -17,8 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +33,14 @@ import com.example.anekdots.Parsing.ParseManager
 import com.example.anekdots.ui.theme.*
 import kotlin.concurrent.thread
 
+private var hasConnection = true
+
+private val networkCallback = object: ConnectivityManager.NetworkCallback(){
+    override fun onLost(network: Network) {
+        super.onLost(network)
+        hasConnection = false
+    }
+}
 
 @Composable
 fun start_sc(navHostController: NavHostController, applicationContext: Context) {
@@ -87,27 +100,39 @@ fun dualBoxes(
             .padding(8.dp)
             .shadow(8.dp, shape = RoundedCornerShape(15.dp), ambientColor = BrownDark)
             .clip(RoundedCornerShape(15.dp))) {
-        Image(painter = painterResource(id = chooseButton(btnType)), contentDescription = null,
+        Image(
+            imageVector = ImageVector.vectorResource(id = if(btnType){R.drawable.btn_new_sqr1}else{R.drawable.figm1btn}),
+            //painter = painterResource(id = chooseButton(btnType)),
+            contentDescription = null,
             Modifier
                 .fillMaxSize()
                 .clickable {
                     if (funType == 0) {
-                        navHostController.navigate(Screen.MenuScreen.route)
+                        if (hasConnection) {
+                            navHostController.navigate(Screen.MenuScreen.route)
+                        }
                     } else if (funType == 1) {
-                        val index = -3
-                        val call = "${Screen.AnekdotScreen.route}/" + index
-                        navHostController.navigate(call)
+                        if (hasConnection) {
+                            val index = -3
+                            val call = "${Screen.AnekdotScreen.route}/" + index
+                            navHostController.navigate(call)
+                        }
                     } else if (funType == 2) {
-                        val browse = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
-                        startActivity(
-                            applicationContext,
-                            browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            null
-                        )
+                        if (hasConnection) {
+                            val browse =
+                                Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
+                            startActivity(
+                                applicationContext,
+                                browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                null
+                            )
+                        }
                     } else if (funType == 3) {
-                        val index = -1
-                        val call = "${Screen.AnekdotScreen.route}/" + index
-                        navHostController.navigate(call)
+                        if (hasConnection) {
+                            val index = -1
+                            val call = "${Screen.AnekdotScreen.route}/" + index
+                            navHostController.navigate(call)
+                        }
                     }
                 },
             contentScale = ContentScale.FillBounds)
