@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,14 +32,27 @@ import androidx.navigation.NavHostController
 import com.example.anekdots.Parsing.ParseManager
 import com.example.anekdots.ui.theme.*
 import kotlin.concurrent.thread
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
-private var hasConnection = true
 
-private val networkCallback = object: ConnectivityManager.NetworkCallback(){
-    override fun onLost(network: Network) {
-        super.onLost(network)
-        hasConnection = false
+fun isOnline(context: Context): Boolean {
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (connectivityManager != null) {
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (capabilities != null) {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                return true
+            }
+        }
     }
+    return false
 }
 
 @Composable
@@ -94,6 +107,9 @@ fun dualBoxes(
     funType: Int,
     applicationContext: Context
 ) {
+    val nconnectstate = remember {
+        mutableStateOf(false)
+    }
     Box(
         Modifier
             .aspectRatio(1f)
@@ -101,24 +117,23 @@ fun dualBoxes(
             .shadow(8.dp, shape = RoundedCornerShape(15.dp), ambientColor = BrownDark)
             .clip(RoundedCornerShape(15.dp))) {
         Image(
-            imageVector = ImageVector.vectorResource(id = if(btnType){R.drawable.btn_new_sqr1}else{R.drawable.figm1btn}),
-            //painter = painterResource(id = chooseButton(btnType)),
+            imageVector = ImageVector.vectorResource(
+                id = if(btnType){R.drawable.btn_new_sqr1}
+                else{R.drawable.figm1btn}
+            ),
             contentDescription = null,
             Modifier
                 .fillMaxSize()
                 .clickable {
-                    if (funType == 0) {
-                        if (hasConnection) {
+                    val hasConnection = isOnline(context = applicationContext)
+                    if (hasConnection) {
+                        if (funType == 0) {
                             navHostController.navigate(Screen.MenuScreen.route)
-                        }
-                    } else if (funType == 1) {
-                        if (hasConnection) {
+                        } else if (funType == 1) {
                             val index = -3
                             val call = "${Screen.AnekdotScreen.route}/" + index
                             navHostController.navigate(call)
-                        }
-                    } else if (funType == 2) {
-                        if (hasConnection) {
+                        } else if (funType == 2) {
                             val browse =
                                 Intent(Intent.ACTION_VIEW, Uri.parse("https://www.anekdot.ru"))
                             startActivity(
@@ -126,13 +141,13 @@ fun dualBoxes(
                                 browse.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                                 null
                             )
-                        }
-                    } else if (funType == 3) {
-                        if (hasConnection) {
+                        } else if (funType == 3) {
                             val index = -1
                             val call = "${Screen.AnekdotScreen.route}/" + index
                             navHostController.navigate(call)
                         }
+                    } else {
+                        nconnectstate.value = true
                     }
                 },
             contentScale = ContentScale.FillBounds)
@@ -143,6 +158,16 @@ fun dualBoxes(
             contentAlignment = Alignment.TopCenter) {
             Text(text = title, fontSize = 18.sp, color = BrownDark, fontWeight = FontWeight.Bold)
         }
+    }
+    if(nconnectstate.value) {
+        noConnectDialog(
+            title = "Ой, что-то не то!",
+            desc = "Не установленно соединение с сетью." + "\n"
+                    + "Убедитесь что устройство подключено к сети интернет, после чего попробуйте снова.",
+            onDismiss = {
+                nconnectstate.value = false
+            }
+        )
     }
 }
 
