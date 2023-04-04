@@ -30,8 +30,7 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
     ) {
         Card(shape = RoundedCornerShape(20.dp), modifier = Modifier
             .fillMaxWidth(0.92f)
-            .fillMaxHeight(0.67f)
-            .border(1.dp, color = BrownDark, shape = RoundedCornerShape(15.dp))) {
+            .fillMaxHeight(0.67f)) {
             Column(modifier =
             Modifier
                 .fillMaxWidth()

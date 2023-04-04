@@ -43,11 +43,9 @@ import com.example.anekdots.Parsing.Aneckdot
 import com.example.anekdots.Parsing.ParseManager
 import com.example.anekdots.Room.Repository.Database
 import com.example.anekdots.ui.theme.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
-import androidx.compose.ui.graphics.Color
 import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
@@ -57,14 +55,17 @@ class MainActivity : ComponentActivity() {
     val parser = ParseManager()
     var curScreen = Screen.StartScreen.route
     var thread2 = Thread()
+    var nconnect = false
     lateinit var dbOutputList: List<com.example.anekdots.Room.Entites.Aneckdot>
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
         intit(parser = parser)
+        var canShowFavorite = false;
         listOfAneckdots = ArrayList<Aneckdot>()
         listOfAneckdots.add(Aneckdot("txt", "link"))
+        nconnect = isOnline(applicationContext)
         setContent {
             MaterialTheme {
                 val navContrller = rememberNavController()
@@ -73,8 +74,10 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navContrller, startDestination = Screen.StartScreen.route) {
                     navController = navContrller
                     composable(route = Screen.MenuScreen.route) {
-                        curScreen = Screen.MenuScreen.route
-                        menuBuild(cathegory = listOfArticles, navContrller)
+                        if(nconnect == true) {
+                            curScreen = Screen.MenuScreen.route
+                            menuBuild(cathegory = listOfArticles, navContrller)
+                        }
                     }
                     composable(route = Screen.AnekdotScreen.route + "/{id}", arguments = listOf(
                         navArgument("id") {
@@ -87,23 +90,40 @@ class MainActivity : ComponentActivity() {
                         curScreen = Screen.AnekdotScreen.route
                         val db = Database.getDatabase(applicationContext)
                         var isFavourite = false
-                        if(indx == -1){
-                            lifecycleScope.launch{
-                                loadRandomAneckd(false)
-                            }
-                        }else if(indx == -2){
-                            readDb(db)
-                            isFavourite = true
-                        }else if(indx == -3){
-                            loadBestAnrckd()
+                        if(indx == -2){
+                            canShowFavorite = true
                         }
-                        anekdotScreen(texts = listOfAneckdots, indx = indx, db, isFavourite)
+                        if(nconnect == true || canShowFavorite == true) {
+                            if (indx == -1) {
+                                lifecycleScope.launch {
+                                    loadRandomAneckd(false)
+                                }
+                            } else if (indx == -2) {
+                                readDb(db)
+                                isFavourite = true
+                                canShowFavorite = false
+                            } else if (indx == -3) {
+                                loadBestAnrckd()
+                            }
+                            anekdotScreen(texts = listOfAneckdots, indx = indx, db, isFavourite)
+                        }
                     }
                     composable(route = Screen.StartScreen.route){
                         curScreen = Screen.StartScreen.route
                         start_sc(navHostController = navController, applicationContext)
                     }
                 }
+            }
+            if(nconnect == false && curScreen != Screen.StartScreen.route && canShowFavorite == false){
+                noConnectDialog(
+                    title = "Ой, что-то не то!",
+                    desc = "Не установленно соединение с сетью." + "\n"
+                            + "Убедитесь что устройство подключено к сети интернет, после чего попробуйте снова.",
+                    onDismiss = {
+                        nconnect = true
+                    }
+                )
+                navController.navigate(Screen.MenuScreen.route)
             }
         }
     }
@@ -135,15 +155,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-   fun listComplite(parser: ParseManager, indx: Int?, navHostController: NavHostController){
-       val call = "${Screen.AnekdotScreen.route}/" + indx
-       thread {
-           listOfAneckdots = parser.getAneckdotsList(indx, false)
-           runOnUiThread {
-               Toast.makeText(this, "${listOfAneckdots.size}", Toast.LENGTH_SHORT).show()
-               navHostController.navigate(route = call)
-           }
-       }
+    fun listComplite(
+        parser: ParseManager,
+        indx: Int?,
+        navHostController: NavHostController
+    ){
+        val call = "${Screen.AnekdotScreen.route}/" + indx
+        this.nconnect = isOnline(applicationContext)
+        if(nconnect == true) {
+            thread {
+                listOfAneckdots = parser.getAneckdotsList(indx, false)
+                runOnUiThread {
+                    navHostController.navigate(route = call)
+                }
+            }
+        }else{
+
+        }
     }
 
     fun listadd(
@@ -151,14 +179,11 @@ class MainActivity : ComponentActivity() {
         indx: Int?,
         showenId: MutableState<Int>
     ){
-        val currentSize = listOfAneckdots.size
         thread {
             val bufListToAdd = parser.getAneckdotsList(indx, true)
             if (bufListToAdd.size>0) {
                 listOfAneckdots.addAll(bufListToAdd)
                 showenId.value++
-            }
-            runOnUiThread { Toast.makeText(this, "${listOfAneckdots.size - currentSize}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -171,7 +196,10 @@ class MainActivity : ComponentActivity() {
 
 
     @Composable
-    fun menuBuild(cathegory: List<String>, navHostController: NavHostController){
+    fun menuBuild(
+        cathegory: List<String>,
+        navHostController: NavHostController
+    ){
         Box(modifier = Modifier
             .background(
                 brush = Brush.verticalGradient(
@@ -194,17 +222,28 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun menuElement(cathegory: String,index: Int, navHostController: NavHostController){
+    fun menuElement(
+        cathegory: String,
+        index: Int,
+        navHostController: NavHostController
+    ){
+        var showDialog = remember {
+            mutableStateOf(false)
+        }
         Card(modifier = Modifier
             .fillMaxWidth()
             .padding(start = 22.dp, end = 22.dp, bottom = 10.dp)
             .clickable {
-                lifecycleScope.launch {
-                    listComplite(parser, index, navHostController)
+                nconnect = isOnline(applicationContext)
+                if (nconnect) {
+                    lifecycleScope.launch {
+                        listComplite(parser, index, navHostController)
+                    }
+                } else {
+                    showDialog.value = true
                 }
             },
             shape = RoundedCornerShape(22.dp),
-            //border = BorderStroke(0.8.dp, color = BrownDark),
             backgroundColor = BeidgeWhite,
             elevation = 2.dp) {
             Column(modifier = Modifier.padding(bottom = 2.dp, top = 2.dp),
@@ -227,6 +266,16 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+        if(showDialog.value){
+            noConnectDialog(
+                title = "Ой, что-то не то!",
+                desc = "Не установленно соединение с сетью." + "\n"
+                        + "Убедитесь что устройство подключено к сети интернет, после чего попробуйте снова.",
+                onDismiss = {
+                    showDialog.value = false;
+                }
+            )
         }
     }
 
@@ -361,6 +410,10 @@ class MainActivity : ComponentActivity() {
         val nextTapBool = remember {
             mutableStateOf(true)
         }
+        val inConect = remember {
+            mutableStateOf(false)
+        }
+        val isConnect = isOnline(applicationContext)
         val coroutineScope = rememberCoroutineScope()
         Box(modifier = Modifier
             .fillMaxSize()
@@ -466,12 +519,14 @@ class MainActivity : ComponentActivity() {
                             .padding(5.dp)
                             .clickable {
                                 try {
-                                    if (listOfAneckdots.get(indx!!).link.contains("http")) {
+                                    if (listOfAneckdots.get(indx!!).link.contains("http") && isConnect) {
                                         val browse = Intent(
                                             Intent.ACTION_VIEW,
                                             Uri.parse(listOfAneckdots.get(indx!!).link)
                                         )
                                         startActivity(browse)
+                                    } else {
+                                        inConect.value = isConnect
                                     }
                                 } catch (e: IOException) {
                                     Toast
@@ -528,6 +583,16 @@ class MainActivity : ComponentActivity() {
                         )
                     }
             }
+        }
+        if(inConect.value == true){
+            noConnectDialog(
+                title = "Ой, что-то не то!",
+                desc = "Не установленно соединение с сетью." + "\n"
+                        + "Убедитесь что устройство подключено к сети интернет, после чего попробуйте снова.",
+                onDismiss = {
+                    inConect.value = false
+                }
+            )
         }
     }
 }
