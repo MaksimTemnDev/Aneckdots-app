@@ -410,10 +410,10 @@ class MainActivity : ComponentActivity() {
         val nextTapBool = remember {
             mutableStateOf(true)
         }
-        val inConect = remember {
+        val inConnect = remember {
             mutableStateOf(false)
         }
-        val isConnect = isOnline(applicationContext)
+        var isConnect = isOnline(applicationContext)
         val coroutineScope = rememberCoroutineScope()
         Box(modifier = Modifier
             .fillMaxSize()
@@ -518,26 +518,26 @@ class MainActivity : ComponentActivity() {
                             .background(BrownMain)
                             .padding(5.dp)
                             .clickable {
-                                try {
-                                    if (listOfAneckdots.get(indx!!).link.contains("http") && isConnect) {
-                                        val browse = Intent(
-                                            Intent.ACTION_VIEW,
-                                            Uri.parse(listOfAneckdots.get(indx!!).link)
-                                        )
-                                        startActivity(browse)
-                                    } else {
-                                        inConect.value = isConnect
+                                    try {
+                                        isConnect = isOnline(applicationContext)
+                                        if (listOfAneckdots.get(indx!!).link.contains("http") && isConnect) {
+                                            val browse = Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse(listOfAneckdots.get(indx!!).link)
+                                            )
+                                            startActivity(browse)
+                                        } else {
+                                            inConnect.value = !isConnect
+                                        }
+                                    } catch (e: IOException) {
+                                        Toast
+                                            .makeText(
+                                                getApplicationContext(),
+                                                "Link was incorrect!",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
                                     }
-                                } catch (e: IOException) {
-                                    Toast
-                                        .makeText(
-                                            getApplicationContext(),
-                                            "Link was incorrect!",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
-                                }
-
                             }) {
                         Icon(
                             painter = painterResource(id = R.drawable.author),
@@ -555,22 +555,27 @@ class MainActivity : ComponentActivity() {
                             .clickable(enabled = nextTapBool.value) {
                                 if (showenId.value + 1 < listOfAneckdots.size) {
                                     showenId.value++
-                                    if (showenId.value == listOfAneckdots.size - 3) {
-                                        lifecycleScope.launch {
-                                            if (indx != null) {
-                                                if (indx <= -1) {
-                                                    Log.d(
-                                                        "tag",
-                                                        "current size anekdots is ${listOfAneckdots.size.toString()}"
-                                                    )
-                                                } else {
-                                                    if (parser.canMoveToNext()) {
-                                                        listadd(parser, indx, showenId)
+                                    isConnect = isOnline(applicationContext)
+                                        if (showenId.value == listOfAneckdots.size - 3) {
+                                            if (isConnect == true) {
+                                                lifecycleScope.launch {
+                                                    if (indx != null) {
+                                                        if (indx <= -1) {
+                                                            Log.d(
+                                                                "tag",
+                                                                "current size anekdots is ${listOfAneckdots.size.toString()}"
+                                                            )
+                                                        } else {
+                                                            if (parser.canMoveToNext()) {
+                                                                listadd(parser, indx, showenId)
+                                                            }
+                                                        }
                                                     }
                                                 }
+                                            } else {
+                                                inConnect.value = true;
                                             }
                                         }
-                                    }
                                 } else if (showenId.value < listOfAneckdots.size) {
                                     nextTapBool.value = true
                                 }
@@ -584,13 +589,13 @@ class MainActivity : ComponentActivity() {
                     }
             }
         }
-        if(inConect.value == true){
+        if(inConnect.value == true){
             noConnectDialog(
                 title = "Ой, что-то не то!",
                 desc = "Не установленно соединение с сетью." + "\n"
                         + "Убедитесь что устройство подключено к сети интернет, после чего попробуйте снова.",
                 onDismiss = {
-                    inConect.value = false
+                    inConnect.value = false
                 }
             )
         }
