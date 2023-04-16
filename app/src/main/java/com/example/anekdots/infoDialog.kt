@@ -1,6 +1,8 @@
 package com.example.anekdots
 
 import android.graphics.Paint.Align
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
@@ -8,6 +10,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -28,6 +34,13 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
     Dialog(onDismissRequest = { onDismiss(false)},
     properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        var show by remember {
+            mutableStateOf(true)
+        }
+        AnimatedVisibility(visibleState = MutableTransitionState(show)) {
+
+        }
+        //Здесь должна быть анимация
         Card(shape = RoundedCornerShape(20.dp), modifier = Modifier
             .fillMaxWidth(0.92f)
             .fillMaxHeight(0.67f)) {

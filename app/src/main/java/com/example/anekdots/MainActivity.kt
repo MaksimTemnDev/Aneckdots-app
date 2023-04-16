@@ -1,6 +1,7 @@
 package com.example.anekdots
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -520,16 +521,16 @@ class MainActivity : ComponentActivity() {
                             .clickable {
                                     try {
                                         isConnect = isOnline(applicationContext)
-                                        if (listOfAneckdots.get(indx!!).link.contains("http") && isConnect) {
+                                        if (listOfAneckdots.get(showenId.value).link.contains("http") && isConnect) {
                                             val browse = Intent(
                                                 Intent.ACTION_VIEW,
-                                                Uri.parse(listOfAneckdots.get(indx!!).link)
+                                                Uri.parse(listOfAneckdots.get(showenId.value).link)
                                             )
                                             startActivity(browse)
                                         } else {
                                             inConnect.value = !isConnect
                                         }
-                                    } catch (e: IOException) {
+                                    } catch (e: ActivityNotFoundException) {
                                         Toast
                                             .makeText(
                                                 getApplicationContext(),
