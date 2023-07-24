@@ -1,8 +1,9 @@
 package com.example.anekdots
 
 import android.graphics.Paint.Align
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
@@ -37,9 +38,7 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
         var show by remember {
             mutableStateOf(true)
         }
-        AnimatedVisibility(visibleState = MutableTransitionState(show)) {
-
-        }
+        AnimatedVisibility(visibleState = MutableTransitionState(show), enter  =  fadeIn(), exit = fadeOut()) {
         //Здесь должна быть анимация
         Card(shape = RoundedCornerShape(20.dp), modifier = Modifier
             .fillMaxWidth(0.92f)
@@ -213,5 +212,6 @@ fun infoDialog(onDismiss:(Boolean)->Unit){
                 }
             }
         }
+    }
     }
 }
